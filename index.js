@@ -284,6 +284,7 @@ app.post("/api/login", async (req, res) => {
         return res.status(404).send("User doesn't exist.");
       }
     } catch (e) {
+      console.log(e)
       res.status(500).send("Can't connect to database.");
     }
   } else {
