@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
+const PORT = 8000;
 
 const cors = require("cors");
 
@@ -284,7 +285,6 @@ app.post("/api/login", async (req, res) => {
         return res.status(404).send("User doesn't exist.");
       }
     } catch (e) {
-      console.log(e)
       res.status(500).send("Can't connect to database.");
     }
   } else {
@@ -354,7 +354,7 @@ app.post(
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
             let exp = new Date();
-            exp.setMonth(exp.getMonth() + 2);
+            exp.setMonth(exp.getMonth() + 12);
             return await firestorage
               .file(destination)
               .getSignedUrl({
@@ -383,8 +383,8 @@ app.post(
               total_exp: totalExp,
               opr: operation,
               publish_date:
-                operation === "publish" ? momentTZ().tz("Asia/Manila") : "",
-              last_modified: momentTZ().tz("Asia/Manila"),
+                operation === "publish" ? momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") : "",
+              last_modified: momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
               reimbursement: {
                 status: balance < 0 ? true : false,
                 amount: balance < 0 ? balance : 0,
@@ -451,7 +451,7 @@ app.post("/api/modify-attachment-links", verifyToken, (req, res) => {
           .doc(rp_id)
           .update({
             attachments: writeX,
-            last_modified: momentTZ().tz("Asia/Manila"),
+            last_modified: momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
           })
           .then((d) => {
             res.status(200).send("Attachments updated.");
@@ -823,7 +823,7 @@ app.put(
         Promise.all(uploadPromises).then((d) => {
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp = new Date();
+            let exp = momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
             exp.setMonth(exp.getMonth() + 2);
             return await firestorage
               .file(destination)
@@ -936,7 +936,7 @@ app.post("/api/fetch-published-reports", verifyToken, (req, res) => {
           });
           const sort = obj
             .slice()
-            .sort((a, b) => new Date(b.rcv_when) - new Date(a.rcv_when));
+            .sort((a, b) => new Date(b.publish_date) - new Date(a.publish_date));
           res.status(200).json(sort);
         })
         .catch((e) => {
@@ -1062,19 +1062,10 @@ app.put("/api/send-reim-notice", verifyToken, (req, res) => {
   }
 });
 
-app.listen(process.env.PORT, () => {
+app.listen(PORT, () => {
   if (connectToDbStat) {
     connectToDb();
   }
-  console.log(`Server is listening at PORT ${process.env.PORT}.`);
+  console.log(`Server is listening at PORT ${PORT}.`);
 });
 
-// rules_version = '2';
-
-// service cloud.firestore {
-//   match /databases/{database}/documents {
-//     match /{document=**} {
-//       allow read, write: if false;
-//     }
-//   }
-// }
