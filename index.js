@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
-const PORT = 8000;
 
 const cors = require("cors");
 
@@ -29,19 +28,7 @@ let firestorage;
 
 const connectToDb = () => {
   admin.initializeApp({
-    credential: admin.credential.cert({
-      "type": process.env.type,
-      "project_id": process.env.project_id,
-      "private_key_id": process.env.private_key_id,
-      "private_key": process.env.private_key,
-      "client_email": process.env.client_email,
-      "client_id": process.env.client_id,
-      "auth_uri": process.env.auth_uri,
-      "token_uri": process.env.token_uri,
-      "auth_provider_x509_cert_url": process.env.auth_provider_x509_cert_url,
-      "client_x509_cert_url": process.env.client_x509_cert_url,
-      "universe_domain": process.env.universe_domain
-    }
+    credential: admin.credential.cert(JSON.parse(process.env.serv)
     ),
     storageBucket: process.env.storageBucket,
   });
@@ -1074,11 +1061,11 @@ app.put("/api/send-reim-notice", verifyToken, (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(process.env.PORT, () => {
   if (connectToDbStat) {
     connectToDb();
   }
-  console.log(`Server is listening at PORT ${PORT}.`);
+  console.log(`Server is listening at PORT ${process.env.PORT}.`);
 });
 
 // rules_version = '2';
