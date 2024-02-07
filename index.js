@@ -47,8 +47,7 @@ const hashPw = async (pw) => {
     throw e;
   }
 };
-const disableCrypto = false;
-const jwtSecret = crypto.randomBytes(32).toString("base64");
+const jwtSecret = process.env.JWT_SECRET;
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -63,8 +62,7 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized - Token is missing" });
   }
   const tok = token.split(" ")[1];
-  console.log(tok);
-  console.log(jwtSecret);
+  
   try {
     // Verify the token using your secret key
     const decoded = jwt.verify(tok, jwtSecret);
@@ -76,7 +74,7 @@ const verifyToken = (req, res, next) => {
     next();
   } catch (err) {
     // Token is invalid
-    console.log(err)
+
     return res.status(401).json({ error: "Unauthorized - Invalid token" });
   }
 };
