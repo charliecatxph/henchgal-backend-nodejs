@@ -63,7 +63,8 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized - Token is missing" });
   }
   const tok = token.split(" ")[1];
-
+  console.log(tok);
+  console.log(jwtSecret);
   try {
     // Verify the token using your secret key
     const decoded = jwt.verify(tok, jwtSecret);
