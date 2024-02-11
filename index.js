@@ -84,7 +84,9 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-app.use(express.json({}));
+app.use(express.json({
+  limit: "200mb"
+}));
 app.use(
   bodyParser.json({
     limit: "200mb",
@@ -312,7 +314,6 @@ app.post(
   verifyToken,
   upload.array("rp_imgs"),
   async (req, res) => {
-    console.log(req.get('Content-Length'));
     const {
       amt_rcv,
       rcv_when,
