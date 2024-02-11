@@ -52,10 +52,9 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 100 * 1024 * 1024,
-    fieldSize: 100*1024*1024
+    fileSize: 1000 * 1024 * 1024,
   },
-}).array("rp_imgs");
+});
 
 const verifyToken = (req, res, next) => {
   // Get the token from the request headers or query parameters or cookies, etc.
@@ -310,20 +309,8 @@ app.post("/api/login", async (req, res) => {
 app.post(
   "/api/upload-report/:operation",
   verifyToken,
+  upload.array("rp_imgs"),
   async (req, res) => {
-
-    upload(req, res, function (err) {
-      // Handle errors
-      if (err instanceof multer.MulterError) {
-        // A Multer error occurred when uploading
-        return res.status(400).send('Multer error: ' + err.message);
-      } else if (err) {
-        // An unknown error occurred
-        return res.status(500).send('Unknown error: ' + err.message);
-  }})
-
-      return;
-
     const {
       amt_rcv,
       rcv_when,
