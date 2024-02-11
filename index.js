@@ -55,7 +55,7 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024,
     fieldSize: 100*1024*1024
   },
-});
+}).array("rp_imgs");
 
 const verifyToken = (req, res, next) => {
   // Get the token from the request headers or query parameters or cookies, etc.
@@ -312,7 +312,7 @@ app.post(
   verifyToken,
   async (req, res) => {
 
-    upload.array('rp_imgs')(req, res, function (err) {
+    upload(req, res, function (err) {
       // Handle errors
       if (err instanceof multer.MulterError) {
         // A Multer error occurred when uploading
@@ -320,7 +320,7 @@ app.post(
       } else if (err) {
         // An unknown error occurred
         return res.status(500).send('Unknown error: ' + err.message);
-      }
+  }})
 
       return;
 
