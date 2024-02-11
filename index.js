@@ -312,7 +312,7 @@ app.post(
   verifyToken,
   async (req, res) => {
 
-    upload.array('files')(req, res, function (err) {
+    upload.array('rp_imgs')(req, res, function (err) {
       // Handle errors
       if (err instanceof multer.MulterError) {
         // A Multer error occurred when uploading
