@@ -1094,7 +1094,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
           const date = new Date(nest.exp_dt);
           if (new Date(from) <= date && new Date(to) >= date) {
             transactions_timeframe.push({
-              "Date": momentTZ(nest.exp_dt).tz("Asia/Manila").format("MMMM DD, YYYY, hh:mm A"),
+              "Date": momentTZ(nest.exp_dt).format("MMMM DD, YYYY, hh:mm A"),
               "Name": nest.exp_name,
               "Location": nest.exp_loc,
               "Amount": nest.exp_amt,
