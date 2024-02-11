@@ -29,8 +29,7 @@ let firestorage;
 
 const connectToDb = () => {
   admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(process.env.serv)
-    ),
+    credential: admin.credential.cert(JSON.parse(process.env.serv)),
     storageBucket: process.env.storageBucket,
   });
 
@@ -50,7 +49,12 @@ const hashPw = async (pw) => {
 const jwtSecret = process.env.JWT_SECRET;
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 200 * 1024 * 1024,
+  },
+});
 
 const verifyToken = (req, res, next) => {
   // Get the token from the request headers or query parameters or cookies, etc.
@@ -62,7 +66,7 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized - Token is missing" });
   }
   const tok = token.split(" ")[1];
-  
+
   try {
     // Verify the token using your secret key
     const decoded = jwt.verify(tok, jwtSecret);
@@ -79,11 +83,16 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-app.use(express.json());
+app.use(express.json({}));
+app.use(
+  bodyParser.json({
+    limit: "200mb",
+  })
+);
 app.use(
   bodyParser.urlencoded({
     extended: true,
-    limit: "200mb"
+    limit: "200mb",
   })
 );
 app.use(cors());
@@ -122,7 +131,8 @@ app.put("/api/verify-user", verifyToken, (req, res) => {
   const { uid } = req.body;
   const role = req.user.data.role;
 
-  if (!role || !uid) {index.js
+  if (!role || !uid) {
+    index.js;
     res.status(400).send("Incomplete parameters.");
     return;
   }
@@ -204,9 +214,8 @@ app.post("/api/register", async (req, res) => {
         .collection("hnch-users")
         .where("email", "==", data.email)
         .get();
-      console.log(query)
+      console.log(query);
       if (!query.empty) {
-
         res.status(409).send("User already exists.");
       } else {
         return db
@@ -337,7 +346,9 @@ app.post(
 
     if (connectToDbStat) {
       images.forEach((dxx) => {
-        dxx.originalname = `IMG_${momentTZ().tz("Asia/Manila").format("YYYYMMDD_hhmmA")}_${uuidv4().split("-")[0]}`;
+        dxx.originalname = `IMG_${momentTZ()
+          .tz("Asia/Manila")
+          .format("YYYYMMDD_hhmmA")}_${uuidv4().split("-")[0]}`;
       });
 
       try {
@@ -367,7 +378,7 @@ app.post(
                 expires: exp.toISOString(),
               })
               .then((d) => {
-                console.log(d)
+                console.log(d);
                 return {
                   download_link: d[0],
                   img_name: dx.originalname,
@@ -389,8 +400,12 @@ app.post(
               total_exp: totalExp,
               opr: operation,
               publish_date:
-                operation === "publish" ? momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") : "",
-              last_modified: momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
+                operation === "publish"
+                  ? momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm")
+                  : "",
+              last_modified: momentTZ()
+                .tz("Asia/Manila")
+                .format("YYYY-MM-DDTHH:mm"),
               reimbursement: {
                 status: balance < 0 ? true : false,
                 amount: balance < 0 ? balance : 0,
@@ -457,7 +472,9 @@ app.post("/api/modify-attachment-links", verifyToken, (req, res) => {
           .doc(rp_id)
           .update({
             attachments: writeX,
-            last_modified: momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
+            last_modified: momentTZ()
+              .tz("Asia/Manila")
+              .format("YYYY-MM-DDTHH:mm"),
           })
           .then((d) => {
             res.status(200).send("Attachments updated.");
@@ -580,8 +597,6 @@ app.post("/api/modify-attachment-links", verifyToken, (req, res) => {
 //     return;
 //   }
 // });
-
-
 
 app.post("/api/upload-transactions", verifyToken, (req, res) => {
   const { payload } = req.body;
@@ -861,8 +876,12 @@ app.put(
               total_exp: totalExp,
               opr: operation,
               publish_date:
-                operation === "publish" ? momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") : "",
-              last_modified: momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
+                operation === "publish"
+                  ? momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm")
+                  : "",
+              last_modified: momentTZ()
+                .tz("Asia/Manila")
+                .format("YYYY-MM-DDTHH:mm"),
               reimbursement: {
                 status: balance < 0 ? true : false,
                 amount: balance < 0 ? balance : 0,
@@ -944,7 +963,9 @@ app.post("/api/fetch-published-reports", verifyToken, (req, res) => {
           });
           const sort = obj
             .slice()
-            .sort((a, b) => new Date(b.publish_date) - new Date(a.publish_date));
+            .sort(
+              (a, b) => new Date(b.publish_date) - new Date(a.publish_date)
+            );
           res.status(200).json(sort);
         })
         .catch((e) => {
@@ -1079,45 +1100,50 @@ app.post("/api/export-data", verifyToken, (req, res) => {
   }
 
   if (connectToDbStat) {
-    db.collection("hnch-transactions").get().then(trans_arr => {
-      if (trans_arr.size === 0) {
-        res.status(400).send("There are no transactions.");
+    db.collection("hnch-transactions")
+      .get()
+      .then((trans_arr) => {
+        if (trans_arr.size === 0) {
+          res.status(400).send("There are no transactions.");
+          return;
+        }
+
+        let transactions_timeframe = [];
+
+        trans_arr.forEach((transaction) => {
+          const transactions_arr = transaction.data().transactions || [];
+
+          transactions_arr.forEach((nest) => {
+            const date = new Date(nest.exp_dt);
+            if (new Date(from) <= date && new Date(to) >= date) {
+              transactions_timeframe.push({
+                Date: momentTZ(nest.exp_dt).format("MMMM DD, YYYY, hh:mm A"),
+                Name: nest.exp_name,
+                Location: nest.exp_loc,
+                Amount: nest.exp_amt,
+                "Employee Name": `${transaction
+                  .data()
+                  .reporter.ln.toUpperCase()}, ${transaction
+                  .data()
+                  .reporter.fn.toUpperCase()} ${transaction
+                  .data()
+                  .reporter.mn[0].toUpperCase()}`,
+              });
+            }
+          });
+        });
+
+        transactions_timeframe.sort((a, b) => {
+          return new Date(b.Date) - new Date(a.Date);
+        });
+        res.status(200).json(transactions_timeframe);
         return;
-      }
-
-      let transactions_timeframe = [];
-
-      trans_arr.forEach(transaction => {
-        const transactions_arr = transaction.data().transactions || [];
-        
-        transactions_arr.forEach(nest => {
-         
-          const date = new Date(nest.exp_dt);
-          if (new Date(from) <= date && new Date(to) >= date) {
-            transactions_timeframe.push({
-              "Date": momentTZ(nest.exp_dt).format("MMMM DD, YYYY, hh:mm A"),
-              "Name": nest.exp_name,
-              "Location": nest.exp_loc,
-              "Amount": nest.exp_amt,
-              "Employee Name": `${transaction.data().reporter.ln.toUpperCase()}, ${transaction.data().reporter.fn.toUpperCase()} ${transaction.data().reporter.mn[0].toUpperCase()}`   
-            })
-          }
-        })
-      })
-
-      transactions_timeframe.sort((a, b) => {
-        return new Date(b.Date) - new Date(a.Date);
-      })
-      res.status(200).json(transactions_timeframe);
-      return;
-
-
-    })
+      });
   } else {
     res.status(404).send("Database is turned off.");
     return;
   }
-})
+});
 
 app.listen(PORT, () => {
   if (connectToDbStat) {
@@ -1125,4 +1151,3 @@ app.listen(PORT, () => {
   }
   console.log(`(DEV MODE) Development server is listening at PORT ${PORT}.`);
 });
-
