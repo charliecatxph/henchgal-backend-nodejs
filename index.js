@@ -23,6 +23,7 @@ const admin = require("firebase-admin");
 const { v4: uuidv4 } = require("uuid");
 
 const fs = require("fs");
+const path = require("path");
 
 let db;
 let firestorage;
@@ -47,14 +48,6 @@ const hashPw = async (pw) => {
   }
 };
 const jwtSecret = process.env.JWT_SECRET;
-
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1000 * 1024 * 1024,
-  },
-});
 
 const verifyToken = (req, res, next) => {
   // Get the token from the request headers or query parameters or cookies, etc.
@@ -83,18 +76,49 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// app.use(express.json({
-//   limit: "200mb"
-// }));
-// app.use(express.urlencoded({
-//   limit: "200mb"
-// }));
-app.use(bodyParser.json({limit: '200mb'}) );
-app.use(bodyParser.urlencoded({
-  limit: '200mb',
-  extended: true,
-  parameterLimit:50000
-}));
+app.use(
+  express.json({
+    limit: "200mb"
+  })
+);
+app.use(
+  express.urlencoded({
+    limit: "200mb",
+    extended: true,
+    parameterLimit: 50000,
+  })
+);
+app.use(bodyParser.json({ limit: "200mb" }));
+app.use(
+  bodyParser.urlencoded({
+    limit: "200mb",
+    extended: true,
+    parameterLimit: 50000,
+  })
+);
+
+const tmpDir = path.join(__dirname, "tmp");
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir);
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "tmp");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+// const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 200 * 1024 * 1024,
+  },
+});
+
 app.use(cors());
 
 app.post("/api/delete-user", verifyToken, (req, res) => {
@@ -214,7 +238,6 @@ app.post("/api/register", async (req, res) => {
         .collection("hnch-users")
         .where("email", "==", data.email)
         .get();
-      console.log(query);
       if (!query.empty) {
         res.status(409).send("User already exists.");
       } else {
@@ -355,18 +378,34 @@ app.post(
         let uploadPromises = [];
 
         images.forEach((image) => {
-          const fileBuffer = image.buffer;
-          const destination = `hnch-images/${image.originalname}`;
+          fs.readFile(image.path, (err, data) => {
+            if (err) {
+              console.error("Error reading file:", err);
+            }
+            const fileBuffer = data;
+            const destination = `hnch-images/${image.originalname}`;
 
-          const uploadPromise = firestorage.file(destination).save(fileBuffer, {
-            metadata: {
-              contentType: image.mimetype,
-            },
+            const uploadPromise = firestorage
+              .file(destination)
+              .save(fileBuffer, {
+                metadata: {
+                  contentType: image.mimetype,
+                },
+              });
+            uploadPromises.push(uploadPromise);
           });
-          uploadPromises.push(uploadPromise);
         });
 
         Promise.all(uploadPromises).then((d) => {
+          images.forEach((image) => {
+            fs.unlink(image.path, (err) => {
+              if (err) {
+                console.error("Error deleting file:", err);
+              }
+              console.log("File deleted successfully");
+            });
+          });
+
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
             let exp = new Date();
@@ -378,7 +417,6 @@ app.post(
                 expires: exp.toISOString(),
               })
               .then((d) => {
-                console.log(d);
                 return {
                   download_link: d[0],
                   img_name: dx.originalname,
@@ -1149,5 +1187,5 @@ app.listen(PORT, () => {
   if (connectToDbStat) {
     connectToDb();
   }
-  console.log(`(DEV MODE) Development server is listening at PORT ${PORT}.`);
+  console.log(`Server is listening at PORT ${PORT}.`);
 });
