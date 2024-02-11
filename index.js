@@ -52,8 +52,8 @@ const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 200 * 1024 * 1024,
-    fieldSize: 200 * 1024 * 1024
+    fileSize: 100 * 1024 * 1024,
+    fieldSize: 100*1024*1024
   },
 });
 
@@ -90,9 +90,9 @@ const verifyToken = (req, res, next) => {
 // app.use(express.urlencoded({
 //   limit: "200mb"
 // }));
-app.use( bodyParser.json({limit: '50mb'}) );
+app.use(bodyParser.json({limit: '200mb'}) );
 app.use(bodyParser.urlencoded({
-  limit: '50mb',
+  limit: '200mb',
   extended: true,
   parameterLimit:50000
 }));
