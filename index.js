@@ -312,6 +312,7 @@ app.post(
   verifyToken,
   upload.array("rp_imgs"),
   async (req, res) => {
+    console.log(req.get('Content-Length'));
     const {
       amt_rcv,
       rcv_when,
