@@ -84,23 +84,18 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-app.use(express.json({
-  limit: "200mb"
+// app.use(express.json({
+//   limit: "200mb"
+// }));
+// app.use(express.urlencoded({
+//   limit: "200mb"
+// }));
+app.use( bodyParser.json({limit: '50mb'}) );
+app.use(bodyParser.urlencoded({
+  limit: '50mb',
+  extended: true,
+  parameterLimit:50000
 }));
-app.use(express.urlencoded({
-  limit: "200mb"
-}));
-// app.use(
-//   bodyParser.json({
-//     limit: "200mb",
-//   })
-// );
-// app.use(
-//   bodyParser.urlencoded({
-//     extended: true,
-//     limit: "200mb",
-//   })
-// );
 app.use(cors());
 
 app.post("/api/delete-user", verifyToken, (req, res) => {
