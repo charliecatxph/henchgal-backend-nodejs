@@ -1191,10 +1191,18 @@ app.post("/api/export-data", verifyToken, (req, res) => {
         reports.forEach(report => {
           const data = report.data();
           const rp_id = report.id;
-          const date = momentTZ(data.publish_date);
+          const date = momentTZ(data.publish_date).tz("Asia/Manila");
 
-          console.log(momentTZ(from).tz("Asia/Manila") <= date);
-          console.log(momentTZ(to).tz("Asia/Manila") >= date)
+
+          console.log({
+            from: momentTZ(from).tz("Asia/Manila"),
+            server: date,
+            result: momentTZ(from).tz("Asia/Manila") <= date,
+            to: momentTZ(to).tz("Asia/Manila"),
+            server: date,
+            result: momentTZ(to).tz("Asia/Manila") >= date
+          });
+      
 
           if (momentTZ(from).tz("Asia/Manila") <= date && momentTZ(to).tz("Asia/Manila") >= date) {
             reports_response_array.push({
