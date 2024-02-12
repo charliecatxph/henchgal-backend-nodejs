@@ -1168,6 +1168,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
                   .reporter.fn.toUpperCase()} ${transaction
                   .data()
                   .reporter.mn[0].toUpperCase()}`,
+                "Report UUID": transaction.data().report_id
               });
             }
           });
