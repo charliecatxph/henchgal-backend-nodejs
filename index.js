@@ -1191,16 +1191,16 @@ app.post("/api/export-data", verifyToken, (req, res) => {
         reports.forEach(report => {
           const data = report.data();
           const rp_id = report.id;
-          const date = momentTZ(data.publish_date);
+          const date = new Date(data.publish_date);
 
 
           console.log({
-            from: momentTZ(from).tz("Asia/Manila"),
+            from: new Date(momentTZ(from).tz("Asia/Manila")),
             server: date,
-            result: momentTZ(from).tz("Asia/Manila") <= date,
-            to: momentTZ(to).tz("Asia/Manila"),
+            result: new Date(momentTZ(from).tz("Asia/Manila")) <= date,
+            to: new Date(momentTZ(to).tz("Asia/Manila")),
             server2: date,
-            result2: momentTZ(to).tz("Asia/Manila") >= date
+            result2: new Date(momentTZ(to).tz("Asia/Manila")) >= date
           });
       
 
