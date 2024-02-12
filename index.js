@@ -1193,7 +1193,8 @@ app.post("/api/export-data", verifyToken, (req, res) => {
           const rp_id = report.id;
           const date = new Date(data.publish_date);
         
-
+          console.log(from, to)
+          console.log(momentTZ(from).tz("Asia/Manila"), momentTZ(to).tz("Asia/Manila"))
           if (momentTZ(from).tz("Asia/Manila") <= date && momentTZ(to).tz("Asia/Manila") >= date) {
             reports_response_array.push({
               "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
