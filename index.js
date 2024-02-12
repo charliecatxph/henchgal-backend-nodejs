@@ -382,6 +382,7 @@ app.post(
             if (err) {
               console.error("Error reading file:", err);
             }
+            console.log("File staged.");
             const fileBuffer = data;
             const destination = `hnch-images/${image.originalname}`;
 
@@ -1130,15 +1131,16 @@ app.put("/api/send-reim-notice", verifyToken, (req, res) => {
 });
 
 app.post("/api/export-data", verifyToken, (req, res) => {
-  const { from, to } = req.body;
+  const { from, to, mode } = req.body;
 
-  if (!from || !to) {
+  if (!from || !to || !mode) {
     res.status(400).send("Incomplete parameters.");
     return;
   }
 
   if (connectToDbStat) {
-    db.collection("hnch-transactions")
+    if (mode === "transactions") {
+      db.collection("hnch-transactions")
       .get()
       .then((trans_arr) => {
         if (trans_arr.size === 0) {
@@ -1159,7 +1161,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
                 Name: nest.exp_name,
                 Location: nest.exp_loc,
                 Amount: nest.exp_amt,
-                "Employee Name": `${transaction
+                "Reporter Name": `${transaction
                   .data()
                   .reporter.ln.toUpperCase()}, ${transaction
                   .data()
@@ -1177,6 +1179,41 @@ app.post("/api/export-data", verifyToken, (req, res) => {
         res.status(200).json(transactions_timeframe);
         return;
       });
+    } else {
+      db.collection('hnch-reports').where("opr", "==", "publish").get().then((reports) => {
+        if (reports.size === 0 ) {
+          res.status(400).send("There are no reports.");
+          return;
+        }
+
+        let reports_response_array = [];
+
+        reports.forEach(report => {
+          const data = report.data();
+          const rp_id = report.id;
+          reports_response_array.push({
+            "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
+            "Purpose": data.purpose,
+            "Received": data.amt_rcv,
+            "When received": momentTZ(data.rcv_when).format("MMMM DD, YYYY, hh:mm A"),
+            "Where received": data.rcv_loc,
+            "Expenditures Total Amount": data.total_exp,
+            "Balance": data.balance,
+            "Reported by": `${data.reporter.ln.toUpperCase()}, ${data.reporter.fn.toUpperCase()} ${data.reporter.mn[0].toUpperCase()}.`,
+            "Description": data.description,
+            "Report UUID": rp_id
+          })
+        })
+
+        reports_response_array.sort((a, b) => {
+          return new Date(b["Published on"]) - new Date(a["Published on"]);
+        });
+
+        res.status(200).json(reports_response_array);
+      }).catch(e => {
+        res.status(400).send("Fail to fetch reports.");
+      })
+    }
   } else {
     res.status(404).send("Database is turned off.");
     return;
