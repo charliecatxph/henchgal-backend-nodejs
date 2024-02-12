@@ -1195,16 +1195,16 @@ app.post("/api/export-data", verifyToken, (req, res) => {
 
 
           console.log({
-            from: momentTZ(from).tz("Asia/Manila"),
+            from: momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
             server: date,
-            result: momentTZ(from).tz("Asia/Manila") <= date,
-            to: momentTZ(to).tz("Asia/Manila"),
+            result: momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") <= date,
+            to: momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
             server2: date,
-            result2: momentTZ(to).tz("Asia/Manila") >= date
+            result2: momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") >= date
           });
       
 
-          if (momentTZ(from).tz("Asia/Manila") <= date && momentTZ(to).tz("Asia/Manila") >= date) {
+          if (momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") <= date && momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") >= date) {
             reports_response_array.push({
               "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
               "Purpose": data.purpose,
