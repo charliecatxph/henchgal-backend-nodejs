@@ -1154,7 +1154,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
           const transactions_arr = transaction.data().transactions || [];
 
           transactions_arr.forEach((nest) => {
-            const date = new Date(nest.exp_dt);
+            const date = momentTZ(data.publish_date).tz("Asia/Manila");
             if (momentTZ(new Date(from)).tz("Asia/Manila") <= date && momentTZ(new Date(to)).tz("Asia/Manila") >= date) {
               transactions_timeframe.push({
                 Date: momentTZ(nest.exp_dt).format("MMMM DD, YYYY, hh:mm A"),
@@ -1191,10 +1191,8 @@ app.post("/api/export-data", verifyToken, (req, res) => {
         reports.forEach(report => {
           const data = report.data();
           const rp_id = report.id;
-          const date = new Date(data.publish_date);
-        
-          console.log(from, to)
-          console.log(momentTZ(from).tz("Asia/Manila"), momentTZ(to).tz("Asia/Manila"))
+          const date = momentTZ(data.publish_date).tz("Asia/Manila");
+
           if (momentTZ(from).tz("Asia/Manila") <= date && momentTZ(to).tz("Asia/Manila") >= date) {
             reports_response_array.push({
               "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
