@@ -1191,7 +1191,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
         reports.forEach(report => {
           const data = report.data();
           const rp_id = report.id;
-          const date = momentTZ(data.publish_date).tz("Asia/Manila");
+          const date = momentTZ(data.publish_date);
 
 
           console.log({
@@ -1199,8 +1199,8 @@ app.post("/api/export-data", verifyToken, (req, res) => {
             server: date,
             result: momentTZ(from).tz("Asia/Manila") <= date,
             to: momentTZ(to).tz("Asia/Manila"),
-            server: date,
-            result: momentTZ(to).tz("Asia/Manila") >= date
+            server2: date,
+            result2: momentTZ(to).tz("Asia/Manila") >= date
           });
       
 
