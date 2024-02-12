@@ -1191,18 +1191,22 @@ app.post("/api/export-data", verifyToken, (req, res) => {
         reports.forEach(report => {
           const data = report.data();
           const rp_id = report.id;
-          reports_response_array.push({
-            "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
-            "Purpose": data.purpose,
-            "Received": data.amt_rcv,
-            "When received": momentTZ(data.rcv_when).format("MMMM DD, YYYY, hh:mm A"),
-            "Where received": data.rcv_loc,
-            "Expenditures Total Amount": data.total_exp,
-            "Balance": data.balance,
-            "Reported by": `${data.reporter.ln.toUpperCase()}, ${data.reporter.fn.toUpperCase()} ${data.reporter.mn[0].toUpperCase()}.`,
-            "Description": data.description,
-            "Report UUID": rp_id
-          })
+          const date = new Date(data.publish_date);
+
+          if (new Date(from) <= date && new Date(to) >= date) {
+            reports_response_array.push({
+              "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
+              "Purpose": data.purpose,
+              "Received": data.amt_rcv,
+              "When received": momentTZ(data.rcv_when).format("MMMM DD, YYYY, hh:mm A"),
+              "Where received": data.rcv_loc,
+              "Expenditures Total Amount": data.total_exp,
+              "Balance": data.balance,
+              "Reported by": `${data.reporter.ln.toUpperCase()}, ${data.reporter.fn.toUpperCase()} ${data.reporter.mn[0].toUpperCase()}.`,
+              "Description": data.description,
+              "Report UUID": rp_id
+            })
+          }
         })
 
         reports_response_array.sort((a, b) => {
