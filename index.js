@@ -1154,14 +1154,14 @@ app.post("/api/export-data", verifyToken, (req, res) => {
           const transactions_arr = transaction.data().transactions || [];
 
           transactions_arr.forEach((nest) => {
-            const date = momentTZ(nest.exp_dt).tz("Asia/Manila");
-            if (momentTZ(new Date(from)).tz("Asia/Manila") <= date && momentTZ(new Date(to)).tz("Asia/Manila") >= date) {
+            const date = new Date(nest.exp_dt);
+            if (new Date(from) <= date && new Date(to) >= date) {
               transactions_timeframe.push({
                 Date: momentTZ(nest.exp_dt).format("MMMM DD, YYYY, hh:mm A"),
                 Name: nest.exp_name,
                 Location: nest.exp_loc,
                 Amount: nest.exp_amt,
-                "Reporter Name": `${transaction
+                "Employee Name": `${transaction
                   .data()
                   .reporter.ln.toUpperCase()}, ${transaction
                   .data()
@@ -1192,17 +1192,6 @@ app.post("/api/export-data", verifyToken, (req, res) => {
           const data = report.data();
           const rp_id = report.id;
           const date = data.publish_date;
-
-
-          console.log({
-            from: momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
-            server: date,
-            result: momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") <= date,
-            to: momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm"),
-            server2: date,
-            result2: momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") >= date
-          });
-      
 
           if (momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") <= date && momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") >= date) {
             reports_response_array.push({
