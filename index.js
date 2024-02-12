@@ -1155,7 +1155,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
 
           transactions_arr.forEach((nest) => {
             const date = new Date(nest.exp_dt);
-            if (new Date(from) <= date && new Date(to) >= date) {
+            if (momentTZ(new Date(from)).tz("Asia/Manila") <= date && momentTZ(new Date(to)).tz("Asia/Manila") >= date) {
               transactions_timeframe.push({
                 Date: momentTZ(nest.exp_dt).format("MMMM DD, YYYY, hh:mm A"),
                 Name: nest.exp_name,
@@ -1192,8 +1192,9 @@ app.post("/api/export-data", verifyToken, (req, res) => {
           const data = report.data();
           const rp_id = report.id;
           const date = new Date(data.publish_date);
+        
 
-          if (new Date(from) <= date && new Date(to) >= date) {
+          if (momentTZ(new Date(from)).tz("Asia/Manila") <= date && momentTZ(new Date(to)).tz("Asia/Manila") >= date) {
             reports_response_array.push({
               "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
               "Purpose": data.purpose,
