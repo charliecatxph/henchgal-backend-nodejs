@@ -864,25 +864,44 @@ app.put(
 
     if (connectToDbStat) {
       images.forEach((dxx) => {
-        dxx.originalname = uuidv4();
+        dxx.originalname = `IMG_${momentTZ()
+          .tz("Asia/Manila")
+          .format("YYYYMMDD_hhmmA")}_${uuidv4().split("-")[0]}`;
       });
 
       try {
         let uploadPromises = [];
 
         images.forEach((image) => {
-          const fileBuffer = image.buffer;
-          const destination = `hnch-images/${image.originalname}`;
+          fs.readFile(image.path, (err, data) => {
+            if (err) {
+              console.error("Error reading file:", err);
+            }
+            console.log("File staged.");
+            const fileBuffer = data;
+            const destination = `hnch-images/${image.originalname}`;
 
-          const uploadPromise = firestorage.file(destination).save(fileBuffer, {
-            metadata: {
-              contentType: image.mimetype,
-            },
+            const uploadPromise = firestorage
+              .file(destination)
+              .save(fileBuffer, {
+                metadata: {
+                  contentType: image.mimetype,
+                },
+              });
+            uploadPromises.push(uploadPromise);
           });
-          uploadPromises.push(uploadPromise);
         });
 
         Promise.all(uploadPromises).then((d) => {
+          images.forEach((image) => {
+            fs.unlink(image.path, (err) => {
+              if (err) {
+                console.error("Error deleting file:", err);
+              }
+              console.log("File deleted successfully");
+            })
+          })
+
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
             let exp = momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
