@@ -409,7 +409,7 @@ app.post(
 
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp = momentTZ((new Date()).setMonth(new Date().getMonth() + 12)).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
+            let exp =  momentTZ().tz("Asia/Manila").add(12, "M").format("YYYY-MM-DDTHH:mm");
             return await firestorage
               .file(destination)
               .getSignedUrl({
@@ -903,7 +903,7 @@ app.put(
 
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp = momentTZ((new Date()).setMonth(new Date().getMonth() + 12)).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
+            let exp =  momentTZ().tz("Asia/Manila").add(12, "M").format("YYYY-MM-DDTHH:mm");
             return await firestorage
               .file(destination)
               .getSignedUrl({
@@ -1246,6 +1246,6 @@ app.listen(PORT, () => {
   if (connectToDbStat) {
     connectToDb();
   }
- 
+  
   console.log(`Server is listening at PORT ${PORT}.`);
 });
