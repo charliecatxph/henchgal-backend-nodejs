@@ -1242,10 +1242,30 @@ app.post("/api/export-data", verifyToken, (req, res) => {
   }
 });
 
+app.put("/api/set-report-to-draft", verifyToken, (req,res) => {
+  const { rp_id } = req.body;
+
+  if (!rp_id) {
+    res.status(400).send("Incomplete parameters.");
+    return;
+  }
+
+  if (connectToDbStat) {
+    db.collection("hnch-reports").doc(rp_id).update({opr : "draft"}).then(d => {
+      res.status(200).send("Report has been set to draft mode.");
+    }).catch(e => {
+      res.status(400).send("Fail to set report to draft mode.");
+    })
+  } else {
+    res.status(404).send("Database is turned off.");
+    return;
+  }
+})
+
 app.listen(PORT, () => {
   if (connectToDbStat) {
     connectToDb();
   }
-  
+
   console.log(`Server is listening at PORT ${PORT}.`);
 });
