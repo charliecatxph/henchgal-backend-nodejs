@@ -409,13 +409,12 @@ app.post(
 
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp = new Date();
-            exp.setMonth(exp.getMonth() + 12);
+            let exp = momentTZ((new Date()).setMonth(new Date().getMonth() + 12)).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
             return await firestorage
               .file(destination)
               .getSignedUrl({
                 action: "read",
-                expires: exp.toISOString(),
+                expires: exp,
               })
               .then((d) => {
                 return {
@@ -904,13 +903,12 @@ app.put(
 
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp = momentTZ().tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
-            exp.setMonth(exp.getMonth() + 2);
+            let exp = momentTZ((new Date()).setMonth(new Date().getMonth() + 12)).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm");
             return await firestorage
               .file(destination)
               .getSignedUrl({
                 action: "read",
-                expires: exp.toISOString(),
+                expires: exp,
               })
               .then((d) => {
                 return {
@@ -1248,5 +1246,6 @@ app.listen(PORT, () => {
   if (connectToDbStat) {
     connectToDb();
   }
+ 
   console.log(`Server is listening at PORT ${PORT}.`);
 });
