@@ -78,7 +78,7 @@ const verifyToken = (req, res, next) => {
 
 app.use(
   express.json({
-    limit: "200mb"
+    limit: "200mb",
   })
 );
 app.use(
@@ -409,7 +409,10 @@ app.post(
 
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp =  momentTZ().tz("Asia/Manila").add(12, "M").format("YYYY-MM-DDTHH:mm");
+            let exp = momentTZ()
+              .tz("Asia/Manila")
+              .add(12, "M")
+              .format("YYYY-MM-DDTHH:mm");
             return await firestorage
               .file(destination)
               .getSignedUrl({
@@ -660,9 +663,9 @@ app.post("/api/upload-transactions", verifyToken, (req, res) => {
 });
 
 app.post("/api/modify-transactions", verifyToken, (req, res) => {
-  const { tr_id, newTrans } = req.body;
+  const { tr_id, newTrans, opr } = req.body;
 
-  if (!tr_id || !newTrans) {
+  if (!tr_id || !newTrans || !opr) {
     res.status(400).send("Incomplete parameters.");
     return;
   }
@@ -671,6 +674,7 @@ app.post("/api/modify-transactions", verifyToken, (req, res) => {
     db.collection("hnch-transactions")
       .doc(tr_id)
       .update({
+        opr: opr,
         transactions: newTrans,
       })
       .then((d) => {
@@ -898,12 +902,15 @@ app.put(
                 console.error("Error deleting file:", err);
               }
               console.log("File deleted successfully");
-            })
-          })
+            });
+          });
 
           const dL = images.map(async (dx) => {
             const destination = `hnch-images/${dx.originalname}`;
-            let exp =  momentTZ().tz("Asia/Manila").add(12, "M").format("YYYY-MM-DDTHH:mm");
+            let exp = momentTZ()
+              .tz("Asia/Manila")
+              .add(12, "M")
+              .format("YYYY-MM-DDTHH:mm");
             return await firestorage
               .file(destination)
               .getSignedUrl({
@@ -1158,83 +1165,97 @@ app.post("/api/export-data", verifyToken, (req, res) => {
   if (connectToDbStat) {
     if (mode === "transactions") {
       db.collection("hnch-transactions")
-      .get()
-      .then((trans_arr) => {
-        if (trans_arr.size === 0) {
-          res.status(400).send("There are no transactions.");
+        .get()
+        .then((trans_arr) => {
+          if (trans_arr.size === 0) {
+            res.status(400).send("There are no transactions.");
+            return;
+          }
+
+          let transactions_timeframe = [];
+
+          trans_arr.forEach((transaction) => {
+            const transactions_arr = transaction.data().transactions || [];
+
+            transactions_arr.forEach((nest) => {
+              const date = new Date(nest.exp_dt);
+              if (new Date(from) <= date && new Date(to) >= date) {
+                transactions_timeframe.push({
+                  Date: momentTZ(nest.exp_dt)
+                    .tz("Asia/Manila")
+                    .format("MMMM DD, YYYY, hh:mm A"),
+                  Name: nest.exp_name,
+                  Location: nest.exp_loc,
+                  Amount: nest.exp_amt,
+                  "Employee Name": `${transaction
+                    .data()
+                    .reporter.ln.toUpperCase()}, ${transaction
+                    .data()
+                    .reporter.fn.toUpperCase()} ${transaction
+                    .data()
+                    .reporter.mn[0].toUpperCase()}`,
+                  "Report UUID": transaction.data().report_id,
+                });
+              }
+            });
+          });
+
+          transactions_timeframe.sort((a, b) => {
+            return new Date(b.Date) - new Date(a.Date);
+          });
+          res.status(200).json(transactions_timeframe);
           return;
-        }
+        });
+    } else {
+      db.collection("hnch-reports")
+        .where("opr", "==", "publish")
+        .get()
+        .then((reports) => {
+          if (reports.size === 0) {
+            res.status(400).send("There are no reports.");
+            return;
+          }
 
-        let transactions_timeframe = [];
+          let reports_response_array = [];
 
-        trans_arr.forEach((transaction) => {
-          const transactions_arr = transaction.data().transactions || [];
+          reports.forEach((report) => {
+            const data = report.data();
+            const rp_id = report.id;
+            const date = data.publish_date;
 
-          transactions_arr.forEach((nest) => {
-            const date = new Date(nest.exp_dt);
-            if (new Date(from) <= date && new Date(to) >= date) {
-              transactions_timeframe.push({
-                Date: momentTZ(nest.exp_dt).tz("Asia/Manila").format("MMMM DD, YYYY, hh:mm A"),
-                Name: nest.exp_name,
-                Location: nest.exp_loc,
-                Amount: nest.exp_amt,
-                "Employee Name": `${transaction
-                  .data()
-                  .reporter.ln.toUpperCase()}, ${transaction
-                  .data()
-                  .reporter.fn.toUpperCase()} ${transaction
-                  .data()
-                  .reporter.mn[0].toUpperCase()}`,
-                "Report UUID": transaction.data().report_id
+            if (
+              momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") <=
+                date &&
+              momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") >= date
+            ) {
+              reports_response_array.push({
+                "Published on": momentTZ(data.publish_date).format(
+                  "MMMM DD, YYYY, hh:mm A"
+                ),
+                Purpose: data.purpose,
+                Received: data.amt_rcv,
+                "When received": momentTZ(data.rcv_when).format(
+                  "MMMM DD, YYYY, hh:mm A"
+                ),
+                "Where received": data.rcv_loc,
+                "Expenditures Total Amount": data.total_exp,
+                Balance: data.balance,
+                "Reported by": `${data.reporter.ln.toUpperCase()}, ${data.reporter.fn.toUpperCase()} ${data.reporter.mn[0].toUpperCase()}.`,
+                Description: data.description,
+                "Report UUID": rp_id,
               });
             }
           });
-        });
 
-        transactions_timeframe.sort((a, b) => {
-          return new Date(b.Date) - new Date(a.Date);
-        });
-        res.status(200).json(transactions_timeframe);
-        return;
-      });
-    } else {
-      db.collection('hnch-reports').where("opr", "==", "publish").get().then((reports) => {
-        if (reports.size === 0 ) {
-          res.status(400).send("There are no reports.");
-          return;
-        }
+          reports_response_array.sort((a, b) => {
+            return new Date(b["Published on"]) - new Date(a["Published on"]);
+          });
 
-        let reports_response_array = [];
-
-        reports.forEach(report => {
-          const data = report.data();
-          const rp_id = report.id;
-          const date = data.publish_date;
-
-          if (momentTZ(from).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") <= date && momentTZ(to).tz("Asia/Manila").format("YYYY-MM-DDTHH:mm") >= date) {
-            reports_response_array.push({
-              "Published on" : momentTZ(data.publish_date).format("MMMM DD, YYYY, hh:mm A"),
-              "Purpose": data.purpose,
-              "Received": data.amt_rcv,
-              "When received": momentTZ(data.rcv_when).format("MMMM DD, YYYY, hh:mm A"),
-              "Where received": data.rcv_loc,
-              "Expenditures Total Amount": data.total_exp,
-              "Balance": data.balance,
-              "Reported by": `${data.reporter.ln.toUpperCase()}, ${data.reporter.fn.toUpperCase()} ${data.reporter.mn[0].toUpperCase()}.`,
-              "Description": data.description,
-              "Report UUID": rp_id
-            })
-          }
+          res.status(200).json(reports_response_array);
         })
-
-        reports_response_array.sort((a, b) => {
-          return new Date(b["Published on"]) - new Date(a["Published on"]);
+        .catch((e) => {
+          res.status(400).send("Fail to fetch reports.");
         });
-
-        res.status(200).json(reports_response_array);
-      }).catch(e => {
-        res.status(400).send("Fail to fetch reports.");
-      })
     }
   } else {
     res.status(404).send("Database is turned off.");
@@ -1242,7 +1263,7 @@ app.post("/api/export-data", verifyToken, (req, res) => {
   }
 });
 
-app.put("/api/set-report-to-draft", verifyToken, (req,res) => {
+app.put("/api/set-report-to-draft", verifyToken, (req, res) => {
   const { rp_id } = req.body;
 
   if (!rp_id) {
@@ -1251,16 +1272,20 @@ app.put("/api/set-report-to-draft", verifyToken, (req,res) => {
   }
 
   if (connectToDbStat) {
-    db.collection("hnch-reports").doc(rp_id).update({opr : "draft"}).then(d => {
-      res.status(200).send("Report has been set to draft mode.");
-    }).catch(e => {
-      res.status(400).send("Fail to set report to draft mode.");
-    })
+    db.collection("hnch-reports")
+      .doc(rp_id)
+      .update({ opr: "draft" })
+      .then((d) => {
+        res.status(200).send("Report has been set to draft mode.");
+      })
+      .catch((e) => {
+        res.status(400).send("Fail to set report to draft mode.");
+      });
   } else {
     res.status(404).send("Database is turned off.");
     return;
   }
-})
+});
 
 app.listen(PORT, () => {
   if (connectToDbStat) {
