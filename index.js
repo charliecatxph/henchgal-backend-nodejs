@@ -778,6 +778,7 @@ app.post("/api/fetch-transactions", verifyToken, (req, res) => {
                 ...transaction,
                 ...reporterInfo,
                 report_id: item.report_id,
+                opr: item.opr
               }));
             });
 
@@ -788,7 +789,9 @@ app.post("/api/fetch-transactions", verifyToken, (req, res) => {
 
             res.status(200).json(sorted);
           })
-          .catch((e) => {});
+          .catch((e) => {
+            res.status(400).send("Fail to fetch transactions.");
+          });
       } else {
         db.collection("hnch-transactions")
           .where("reporter.uid", "==", uid)
@@ -805,6 +808,7 @@ app.post("/api/fetch-transactions", verifyToken, (req, res) => {
                 ...transaction,
                 ...reporterInfo,
                 report_id: item.report_id,
+                opr: item.opr
               }));
             });
             // Sorting all transactions by exp_date in descending order
@@ -814,7 +818,9 @@ app.post("/api/fetch-transactions", verifyToken, (req, res) => {
 
             res.status(200).json(sorted);
           })
-          .catch((e) => {});
+          .catch((e) => {
+            res.status(400).send("Fail to fetch transactions.");
+          });
       }
     }
   } else {
