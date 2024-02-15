@@ -1276,7 +1276,22 @@ app.put("/api/set-report-to-draft", verifyToken, (req, res) => {
       .doc(rp_id)
       .update({ opr: "draft" })
       .then((d) => {
-        res.status(200).send("Report has been set to draft mode.");
+        db.collection("hnch-transactions").where("report_id", "==", rp_id).get().then(trans => {
+          if (d.size === 0) {
+            res.status(400).send("Fail to set transaction to draft.");
+            return;
+          }
+          let tmp = [];
+          trans.forEach(transaction => {
+            tmp.push(db.collection("hnch-transactions").doc(transaction.id).update({"opr": "draft"}));
+          })  
+
+          Promise.all(tmp).then(d => {
+            res.status(200).send("Report has been set to draft mode.");
+          }).catch(e => {
+            res.status(400).send("Fail to set report and transaction to draft mode.");
+          })
+        })
       })
       .catch((e) => {
         res.status(400).send("Fail to set report to draft mode.");
