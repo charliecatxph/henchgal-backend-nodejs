@@ -777,6 +777,7 @@ app.post("/api/fetch-transactions", verifyToken, (req, res) => {
               return item.transactions.map((transaction) => ({
                 ...transaction,
                 ...reporterInfo,
+                nameQuery: `${reporterInfo.fn} ${reporterInfo.mn} ${reporterInfo.ln}`,
                 report_id: item.report_id,
                 opr: item.opr
               }));
